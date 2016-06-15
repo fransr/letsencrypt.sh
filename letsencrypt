@@ -181,6 +181,7 @@ load_config() {
   [[ -n "${PARAM_CERTDIR:-}" ]] && CERTDIR="${PARAM_CERTDIR}"
   [[ -n "${PARAM_CHALLENGETYPE:-}" ]] && CHALLENGETYPE="${PARAM_CHALLENGETYPE}"
   [[ -n "${PARAM_KEY_ALGO:-}" ]] && KEY_ALGO="${PARAM_KEY_ALGO}"
+  [[ -n "${PARAM_APP_ID:-}" ]] && APP_ID="${PARAM_APP_ID}"
   [[ -n "${PARAM_OCSP_MUST_STAPLE:-}" ]] && OCSP_MUST_STAPLE="${PARAM_OCSP_MUST_STAPLE}"
 
   verify_config
@@ -486,9 +487,11 @@ sign_csr() {
   for altname in ${altnames}; do
     challenge_token="${challenge_tokens[${idx}]}"
     keyauth="${keyauths[${idx}]}"
-echo "hej"
-echo ${challenge_token}
-echo "svej"
+    echo "Setting ENV on app..."
+    heroku config:set LETS_ENCRYPT_CHALLENGE=${keyauth} --app ${APP_ID}
+    echo "Waiting for deploy..."
+    sleep 10
+    echo "Done."
     # Wait for hook script to deploy the challenge if used
     # shellcheck disable=SC2086
     [[ -n "${HOOK}" ]] && [[ "${HOOK_CHAIN}" != "yes" ]] && "${HOOK}" "deploy_challenge" ${deploy_args[${idx}]}
@@ -1022,6 +1025,12 @@ main() {
         shift 1
         check_parameters "${1:-}"
         PARAM_KEY_ALGO="${1}"
+        ;;
+        
+      --app)
+        shift 1
+        check_parameters "${1:-}"
+        PARAM_APP_ID="${1}"
         ;;
 
       *)
