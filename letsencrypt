@@ -490,7 +490,7 @@ sign_csr() {
     echo "Setting ENV on app..."
     heroku config:set LETS_ENCRYPT_CHALLENGE=${keyauth} --app ${APP_ID}
     echo "Waiting for deploy..."
-    sleep 10
+    sleep 20
     echo "Done."
     # Wait for hook script to deploy the challenge if used
     # shellcheck disable=SC2086
