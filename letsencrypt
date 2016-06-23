@@ -444,7 +444,6 @@ sign_csr() {
     # Ask the acme-server for new challenge token and extract them from the resulting json block
     echo " + Requesting challenge for ${altname}..."
     response="$(signed_request "${CA_NEW_AUTHZ}" '{"resource": "new-authz", "identifier": {"type": "dns", "value": "'"${altname}"'"}}' | clean_json)"
-    echo ${response}
     challenges="$(printf '%s\n' "${response}" | sed -n 's/.*\("challenges":[^\[]*\[[^]]*]\).*/\1/p')"
     repl=$'\n''{' # fix syntax highlighting in Vim
     challenge="$(printf "%s" "${challenges//\{/${repl}}" | grep \""${CHALLENGETYPE}"\")"
@@ -454,6 +453,8 @@ sign_csr() {
     if [[ -z "${challenge_token}" ]] || [[ -z "${challenge_uri}" ]]; then
       _exiterr "Can't retrieve challenges (${response})"
     fi
+    
+    challenge_url="http://${altname}/.well-known/acme-challenge/${challenge_token}"
 
     # Challenge response consists of the challenge token and the thumbprint of our public certificate
     keyauth="${challenge_token}.${thumbprint}"
@@ -472,6 +473,7 @@ sign_csr() {
     esac
 
     challenge_uris[${idx}]="${challenge_uri}"
+    challenge_urls[${idx}]="${challenge_url}"
     keyauths[${idx}]="${keyauth}"
     challenge_tokens[${idx}]="${challenge_token}"
     # Note: assumes args will never have spaces!
@@ -487,7 +489,7 @@ sign_csr() {
   idx=0
   for altname in ${altnames}; do
     challenge_token="${challenge_tokens[${idx}]}"
-    challenge_url="${challenge_uris[${idx}]}"
+    challenge_url="${challenge_urls[${idx}]}"
     keyauth="${keyauths[${idx}]}"
     echo "Setting ENV on app..."
     heroku config:set LETS_ENCRYPT_CHALLENGE=${keyauth} --app ${APP_ID}
