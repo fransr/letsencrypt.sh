@@ -486,11 +486,20 @@ sign_csr() {
   idx=0
   for altname in ${altnames}; do
     challenge_token="${challenge_tokens[${idx}]}"
+    challenge_url="${challenge_uris[${idx}]}"
     keyauth="${keyauths[${idx}]}"
     echo "Setting ENV on app..."
     heroku config:set LETS_ENCRYPT_CHALLENGE=${keyauth} --app ${APP_ID}
     echo "Waiting for deploy..."
     sleep 20
+    echo -n "Checking for proper response on ${challenge_url} ..."
+    while [ "$(curl -sI ${challenge_url} | grep -o 200)" != "200" ]; do
+      echo -n "."
+      sleep 3
+    done
+    echo ""
+    echo "Success!"
+    sleep 3
     echo "Done."
     # Wait for hook script to deploy the challenge if used
     # shellcheck disable=SC2086
