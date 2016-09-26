@@ -496,7 +496,7 @@ sign_csr() {
     echo "Waiting for deploy..."
     sleep 20
     echo -n "Checking for proper response on ${challenge_url} ..."
-    while [ "$(curl -sI ${challenge_url} | grep -o 200)" != "200" ]; do
+    while [ "$(curl -sIL ${challenge_url} | grep -o 200)" != "200" ]; do
       echo -n "."
       sleep 3
     done
